@@ -1,3 +1,4 @@
+/* Audacious-Mod (2024) https://github.com/dualword/Audacious-Mod License:GNU GPL v2*/
 /*
  * info_bar.cc
  * Copyright 2014 William Pitcock
@@ -167,8 +168,7 @@ void InfoVis::paintEvent(QPaintEvent *)
         int m = aud::min(ps.VisCenter + v, ps.Height);
 
         p.fillRect(x, ps.VisCenter - v, ps.BandWidth, v, m_bar_colors[i].main);
-        p.fillRect(x, ps.VisCenter, ps.BandWidth, m - ps.VisCenter,
-                   m_bar_colors[i].shadow);
+        //p.fillRect(x, ps.VisCenter, ps.BandWidth, m - ps.VisCenter, m_bar_colors[i].shadow);
     }
 }
 
