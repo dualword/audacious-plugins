@@ -226,7 +226,7 @@ void GLSpectrumWidget::draw_bars ()
     glPushMatrix ();
     glTranslatef (0.0f, -0.5f, -5.0f);
     glRotatef (38.0f, 1.0f, 0.0f, 0.0f);
-    glRotatef (s_angle + 180.0f, 0.0f, 1.0f, 0.0f);
+    glRotatef (180.0f, 0.0f, 1.0f, 0.0f);
     glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
 
     for (int i = 0; i < NUM_BANDS; i ++)
@@ -264,7 +264,7 @@ void GLSpectrumWidget::paintGL ()
     glMatrixMode (GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    glFrustum (-1.1f, 1, -1.5f, 1, 2, 10);
+    glFrustum (-1.1f, .9, -.8f, 0.6, 2, 10);
     glMatrixMode (GL_MODELVIEW);
     glPushMatrix ();
     glLoadIdentity ();
