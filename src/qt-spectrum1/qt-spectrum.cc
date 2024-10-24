@@ -69,7 +69,7 @@ SpectrumWidget::~SpectrumWidget ()
 void SpectrumWidget::paint_background (QPainter & p)
 {
     auto & base = palette ().color (QPalette::Window);
-    p.fillRect (0, 0, width (), height (), base);
+    p.fillRect (0, 0, width (), height (), Qt::black);
 }
 
 void SpectrumWidget::paint_spectrum (QPainter & p)
@@ -80,13 +80,13 @@ void SpectrumWidget::paint_spectrum (QPainter & p)
         auto color = audqt::vis_bar_color (palette ().color (QPalette::Highlight), i, bands);
 
         p.fillRect (x + 1, height () - (bars[i] * height () / 40),
-         (width () / bands) - 1, (bars[i] * height () / 40), color);
+         (width () / bands) - 1, (bars[i] * height () / 40), Qt::green);
     }
 }
 
 void SpectrumWidget::resizeEvent (QResizeEvent * event)
 {
-    bands = width () / 10;
+    bands = width () / 2;
     bands = aud::clamp(bands, 12, MAX_BANDS);
     Visualizer::compute_log_xscale (xscale, bands);
     update ();
