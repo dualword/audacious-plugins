@@ -40,7 +40,6 @@ public:
     ~ScopeWidget ();
     void resize (int w, int h);
     void clear ();
-    void draw_vert_line (int x, int y1, int y2);
     QVector<QPointF> vec;
 
 protected:

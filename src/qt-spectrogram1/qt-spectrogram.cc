@@ -1,6 +1,6 @@
 /* Audacious-Mod (2024) https://github.com/dualword/Audacious-Mod License:GNU GPL v2*/
 /*
- *  Scope plugin for Audacious
+ *  Spectrogram plugin for Audacious
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
@@ -32,13 +32,13 @@
 #include <libaudcore/plugin.h>
 #include <libaudcore/preferences.h>
 
-class ScopeWidget : public QWidget {
+class SpectrogramWidget : public QWidget {
 public:
-    ScopeWidget (QWidget * p = nullptr);
-    ~ScopeWidget ();
+    SpectrogramWidget (QWidget * p = nullptr);
+    ~SpectrogramWidget ();
     void resize (int w, int h);
     void clear ();
-    QVector<QPointF> vec;
+    QImage image;
 
 protected:
     void resizeEvent (QResizeEvent *);
@@ -48,41 +48,40 @@ private:
 
 };
 
-static ScopeWidget *s_widget = nullptr;
+static SpectrogramWidget *s_widget = nullptr;
 
-ScopeWidget::ScopeWidget (QWidget * p) :  QWidget (p), vec(512)
+SpectrogramWidget::SpectrogramWidget (QWidget * p) :  QWidget (p)
 {
     resize (width (), height ());
+    image = QImage(width()/2, height()/2, QImage::Format_RGB32);
+    image.fill(Qt::black);
 }
 
-ScopeWidget::~ScopeWidget ()
+SpectrogramWidget::~SpectrogramWidget ()
 {
     s_widget = nullptr;
 }
 
 
-void ScopeWidget::paintEvent (QPaintEvent *)
+void SpectrogramWidget::paintEvent (QPaintEvent *)
 {
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
     p.fillRect(0, 0, width(), height(), Qt::black);
-
-    QPen pen( Qt::green, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin );
-    p.setPen( pen );
-    p.drawLines(vec);
+    p.drawImage(0,0,image);
 }
 
-void ScopeWidget::resizeEvent (QResizeEvent *)
+void SpectrogramWidget::resizeEvent (QResizeEvent *)
 {
     resize (width (), height ());
 }
 
-void ScopeWidget::resize (int w, int h)
+void SpectrogramWidget::resize (int w, int h)
 {
    update ();
 }
 
-void ScopeWidget::clear ()
+void SpectrogramWidget::clear ()
 {
     update ();
 }
@@ -91,22 +90,20 @@ class ScopeQt : public VisPlugin
 {
 public:
     static constexpr PluginInfo info = {
-        N_("Scope1"),
+        N_("Spectrogram"),
         PACKAGE,
         nullptr,
         nullptr,
         PluginQtOnly
     };
 
-    constexpr ScopeQt () : VisPlugin (info, Visualizer::MonoPCM) {}
+    constexpr ScopeQt () : VisPlugin (info, Visualizer::Freq) {}
 
     bool init ();
     void cleanup ();
-
     void * get_qt_widget ();
-
     void clear ();
-    void render_mono_pcm (const float * pcm);
+    void render_freq (const float * pcm);
 };
 
 EXPORT ScopeQt aud_plugin_instance;
@@ -124,29 +121,27 @@ void ScopeQt::cleanup ()
 void ScopeQt::clear ()
 {
     if (s_widget){
-        for(auto& p : s_widget->vec){
-            p.rx() = 0;
-            p.ry() = 0;
-        }
+        s_widget->image.fill(Qt::black);
         s_widget->clear ();
     }
 }
 
-void ScopeQt::render_mono_pcm (const float * pcm)
+//TODO
+void ScopeQt::render_freq (const float * pcm)
 {
-    float width = s_widget->width ();
-    float height = s_widget->height ();
-    float x0 = 0, y0 = height *0.5;
-
-    for (int i = 0; i < 512; i+=2  ) {
-        s_widget->vec[i].rx() = x0;
-        s_widget->vec[i].ry() = y0;
-        x0 += width/256;
-        float y1 = height * 0.5 + pcm[i]*100;
-        s_widget->vec[i+1].rx() = x0;
-        s_widget->vec[i+1].ry() = y1;
-        y0 = y1;
+    QRgb *line;
+    for (int y = 0; y < s_widget->image.height() ; y++) {
+        line = reinterpret_cast<QRgb*>(s_widget->image.scanLine(y));
+        for (int x = s_widget->image.width()-1; x >=0; x--) {
+            line[x] = line[x-1];
+        }
     }
+
+    for(int i = 0; i < 256; ++i) {
+        int color = abs(10 * log10f(pcm[i]));
+        s_widget->image.setPixelColor(0, i, QColor(color, color, color));
+    }
+
     s_widget->update ();
 }
 
@@ -154,6 +149,6 @@ void * ScopeQt::get_qt_widget ()
 {
     if (s_widget) return s_widget;
 
-    s_widget = new ScopeWidget ();
+    s_widget = new SpectrogramWidget ();
     return s_widget;
 }
